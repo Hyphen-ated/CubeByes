@@ -99,7 +99,6 @@ public class ByesActivity extends AppCompatActivity {
 
     void generateLaterBye() {
         LinearLayout playerList = findViewById(R.id.playerList);
-        Log.d("byes","going through boxes");
         
         List<Player> eligiblePlayers = new ArrayList<>();
         for(CharSequence name : selectedPlayers) {

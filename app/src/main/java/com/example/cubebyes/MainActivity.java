@@ -5,7 +5,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
@@ -30,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +45,16 @@ public class MainActivity extends AppCompatActivity {
     public static final String playerFileName = "players.txt";
     public static final String githubUrl = "https://raw.githubusercontent.com/Hyphen-ated/CubeByeAffinities/master/players.txt";
 
+    
+    private void snackMsg(String msg) {
+        Snackbar bar = Snackbar.make(playerCountText, msg, 2000);
+        bar.show();
+    }
+    
+    private void snackMsg(String msg, Throwable tr) {
+        snackMsg(msg);
+        Log.e("cubebyes", msg, tr);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,21 +121,25 @@ public class MainActivity extends AppCompatActivity {
         try {
             uri = new URI(githubUrl);
         } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            snackMsg("Bad URL for player data", e);
+            return;
         }
         String data = null;
         try {
             data = IOUtils.toString(uri, "utf-8");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            snackMsg("Couldn't get player data from the internet", e);
+            return;
         }
         File dir = getFilesDir();
         File playersFile = new File(dir, playerFileName);
         try {
             IOUtils.write(data, new FileOutputStream(playersFile));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            snackMsg("Couldn't write player data to a file", e);
+            return;
         }
+        snackMsg("Updated player data from the internet");
     }
 
     private void setupPlayersFromFile() {
@@ -134,14 +149,14 @@ public class MainActivity extends AppCompatActivity {
             lines = IOUtils.readLines(fis, "utf-8");
         } catch (FileNotFoundException e) {
             try {
-                lines = IOUtils.readLines(new StringReader("6 Alvin\n6 Chad\n6 Emmett\n"));
+                lines = IOUtils.readLines(new StringReader("0 No\n 0 player data\n0 present"));
             } catch (IOException e1) {
                 throw new RuntimeException(e1);
             }
             //"Couldn't find players.txt"
         } catch (IOException e) {
-            throw new RuntimeException(e);
-            //"Couldn't read players.txt"
+            snackMsg("Failed to read local players file", e);
+            return;
         }
 
 
@@ -157,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+
 
         populateList();
     }
