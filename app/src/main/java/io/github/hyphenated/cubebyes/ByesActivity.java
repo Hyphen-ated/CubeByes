@@ -26,7 +26,7 @@ import java.util.TreeMap;
 public class ByesActivity extends AppCompatActivity {
 
     private HashSet<String> selectedPlayers = new HashSet<>();
-    private TreeMap<String, Integer> playerAffinities = new TreeMap<>();
+    private TreeMap<String, Integer> playerAffinities = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private List<CheckBox> boxes = new ArrayList<>();
     private static final Random rand = new Random();
     public static final int r1EligibleCount = 4;
