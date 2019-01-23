@@ -38,8 +38,8 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    private HashSet<CharSequence> selectedPlayers = new HashSet<>();
-    private TreeMap<CharSequence, Integer> playerAffinities = new TreeMap<>();
+    private HashSet<String> selectedPlayers = new HashSet<>();
+    private TreeMap<String, Integer> playerAffinities = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private TextView playerCountText;
 
     public static final String playerFileName = "players.txt";
@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
         startCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                HashMap<CharSequence, Integer> activePlayers = new HashMap<>();
-                for (CharSequence player : selectedPlayers) {
+                HashMap<String, Integer> activePlayers = new HashMap<>();
+                for (String player : selectedPlayers) {
                     activePlayers.put(player, playerAffinities.get(player));
                 }
                 Intent intent = new Intent(that, ByesActivity.class);
@@ -179,8 +179,8 @@ public class MainActivity extends AppCompatActivity {
 
     void populateList() {
         LinearLayout playerList = findViewById(R.id.playerList);
-        for (Map.Entry<CharSequence, Integer> e : playerAffinities.entrySet()) {
-            CharSequence name = e.getKey();
+        for (Map.Entry<String, Integer> e : playerAffinities.entrySet()) {
+            String name = e.getKey();
             int affinity = e.getValue();
             CheckBox cb = createBox(name);
             cb.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    CheckBox createBox(CharSequence label) {
+    CheckBox createBox(String label) {
         CheckBox cb = new CheckBox(getApplicationContext());
         cb.setText(label);
         cb.setTextSize(32);
@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                CharSequence text = buttonView.getText();
+                String text = buttonView.getText().toString();
                 if (text == null) return;
                 if(isChecked) {
                     selectedPlayers.add(text);

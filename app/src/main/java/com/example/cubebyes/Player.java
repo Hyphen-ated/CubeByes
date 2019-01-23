@@ -1,10 +1,10 @@
 package com.example.cubebyes;
 
 public class Player implements Comparable<Player> {
-    public final CharSequence name;
+    public final String name;
     public final int affinity;
 
-    public Player(CharSequence name, int affinity) {
+    public Player(String name, int affinity) {
         this.name = name;
         this.affinity = affinity;
     }

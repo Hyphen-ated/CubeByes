@@ -25,8 +25,8 @@ import java.util.TreeMap;
 
 public class ByesActivity extends AppCompatActivity {
 
-    private HashSet<CharSequence> selectedPlayers = new HashSet<>();
-    private TreeMap<CharSequence, Integer> playerAffinities = new TreeMap<>();
+    private HashSet<String> selectedPlayers = new HashSet<>();
+    private TreeMap<String, Integer> playerAffinities = new TreeMap<>();
     private List<CheckBox> boxes = new ArrayList<>();
     private static final Random rand = new Random();
     public static final int r1EligibleCount = 4;
@@ -48,10 +48,10 @@ public class ByesActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Object o = intent.getExtras().get("players");
 
-        HashMap<CharSequence, Integer> incomingPlayers = (HashMap<CharSequence, Integer>) o;
+        HashMap<String, Integer> incomingPlayers = (HashMap<String, Integer>) o;
 
         List<Player> rankedPlayers = new ArrayList<>(incomingPlayers.size());
-        for (Map.Entry<CharSequence, Integer> e : incomingPlayers.entrySet()) {
+        for (Map.Entry<String, Integer> e : incomingPlayers.entrySet()) {
             playerAffinities.put(e.getKey(), e.getValue());
             rankedPlayers.add(new Player(e.getKey(), e.getValue()));
         }
@@ -101,7 +101,7 @@ public class ByesActivity extends AppCompatActivity {
         LinearLayout playerList = findViewById(R.id.playerList);
         
         List<Player> eligiblePlayers = new ArrayList<>();
-        for(CharSequence name : selectedPlayers) {
+        for(String name : selectedPlayers) {
             eligiblePlayers.add(new Player(name, playerAffinities.get(name)));
         }
         selectedPlayers.clear();
@@ -109,7 +109,7 @@ public class ByesActivity extends AppCompatActivity {
         Collections.shuffle(eligiblePlayers);
 
         int topAffinity = -999;
-        CharSequence byeGetter = "";
+        String byeGetter = "";
         for (Player p : eligiblePlayers) {
             if (p.affinity > topAffinity) {
                 topAffinity = p.affinity;
@@ -124,8 +124,8 @@ public class ByesActivity extends AppCompatActivity {
 
     }
 
-    void announceBye(CharSequence name) {
-        CharSequence text;
+    void announceBye(String name) {
+        String text;
         if(name == null || name.length() == 0) {
             text = "Error: no name provided";
         } else {
@@ -137,8 +137,8 @@ public class ByesActivity extends AppCompatActivity {
 
     void populateList() {
         LinearLayout playerList = findViewById(R.id.playerList);
-        for (Map.Entry<CharSequence, Integer> e : playerAffinities.entrySet()) {
-            CharSequence name = e.getKey();
+        for (Map.Entry<String, Integer> e : playerAffinities.entrySet()) {
+            String name = e.getKey();
             int affinity = e.getValue();
             CheckBox cb = createBox(name);
             cb.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
@@ -158,7 +158,7 @@ public class ByesActivity extends AppCompatActivity {
         }
     }
 
-    CheckBox createBox(CharSequence label) {
+    CheckBox createBox(String label) {
         CheckBox cb = new CheckBox(getApplicationContext());
         cb.setText(label);
         cb.setTextSize(32);
@@ -167,7 +167,7 @@ public class ByesActivity extends AppCompatActivity {
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                CharSequence text = buttonView.getText();
+                String text = buttonView.getText().toString();
                 if (text == null) return;
                 if(isChecked) {
                     selectedPlayers.add(text);
