@@ -1,4 +1,4 @@
-package com.example.cubebyes;
+package io.github.hyphenated.cubebyes;
 
 import android.content.Intent;
 import android.graphics.Color;

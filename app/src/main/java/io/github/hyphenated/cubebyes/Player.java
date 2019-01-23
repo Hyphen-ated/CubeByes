@@ -1,4 +1,4 @@
-package com.example.cubebyes;
+package io.github.hyphenated.cubebyes;
 
 public class Player implements Comparable<Player> {
     public final String name;
