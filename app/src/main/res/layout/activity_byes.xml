@@ -10,12 +10,9 @@
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="411dp"
-        android:layout_height="597dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="83dp"
+        android:layout_height="555dp"
         android:scrollbarStyle="insideInset"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        tools:layout_editor_absoluteY="0dp">
 
         <LinearLayout
             android:id="@+id/playerList"
@@ -23,11 +20,39 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="0dp">
-        </LinearLayout>
+            tools:layout_editor_absoluteY="0dp"></LinearLayout>
 
     </ScrollView>
 
+    <TextView
+            android:id="@+id/byeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text=""
+            android:textSize="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/scrollView" android:layout_marginBottom="64dp"
+            app:layout_constraintBottom_toTopOf="@+id/byeButton"/>
+
+    <Button
+            android:id="@+id/byeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginBottom="24dp"
+            android:text="Pick Another Bye"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
 
 
 </android.support.constraint.ConstraintLayout>
