@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Cube Byes</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_byes">ByesActivity</string>
 </resources>

@@ -1,29 +1,73 @@
 package com.example.cubebyes;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+
+    private HashSet<CharSequence> selectedPlayers = new HashSet<>();
+    private TreeMap<CharSequence, Integer> playerAffinities = new TreeMap<>();
+    private TextView playerCountText;
+
+    public static final String playerFileName = "players.txt";
+    public static final String githubUrl = "https://raw.githubusercontent.com/Hyphen-ated/CubeByeAffinities/master/players.txt";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //we are running network on the main thread because there is nothing else the app can ever do while waiting
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        setupPlayersFromFile();
+
         FloatingActionButton startCube = findViewById(R.id.startCubeButton);
+        final MainActivity that = this;
         startCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               createLotsOfBoxes();
+                HashMap<CharSequence, Integer> activePlayers = new HashMap<>();
+                for (CharSequence player : selectedPlayers) {
+                    activePlayers.put(player, playerAffinities.get(player));
+                }
+                Intent intent = new Intent(that, ByesActivity.class);
+                intent.putExtra("players", activePlayers);
+                startActivity(intent);
             }
         });
 
@@ -31,10 +75,12 @@ public class MainActivity extends AppCompatActivity {
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "dingus malingus", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                updatePlayerData();
+                setupPlayersFromFile();
             }
         });
+
+        playerCountText = findViewById(R.id.playerCount);
     }
 
     @Override
@@ -59,16 +105,103 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void createLotsOfBoxes() {
+    private void updatePlayerData() {
+        URI uri = null;
+        try {
+            uri = new URI(githubUrl);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        String data = null;
+        try {
+            data = IOUtils.toString(uri, "utf-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        File dir = getFilesDir();
+        File playersFile = new File(dir, playerFileName);
+        try {
+            IOUtils.write(data, new FileOutputStream(playersFile));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setupPlayersFromFile() {
+        List<String> lines;
+        try {
+            FileInputStream fis = openFileInput(playerFileName);
+            lines = IOUtils.readLines(fis, "utf-8");
+        } catch (FileNotFoundException e) {
+            try {
+                lines = IOUtils.readLines(new StringReader("6 Alvin\n6 Chad\n6 Emmett\n"));
+            } catch (IOException e1) {
+                throw new RuntimeException(e1);
+            }
+            //"Couldn't find players.txt"
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+            //"Couldn't read players.txt"
+        }
+
+
+        Pattern pat = Pattern.compile("^\\s*(\\d*)\\s+(.+)");
         LinearLayout playerList = findViewById(R.id.playerList);
         playerList.removeAllViews();
-        for (int i = 0; i < 30; ++i) {
-            CheckBox cb = new CheckBox(getApplicationContext());
-            cb.setText("Player number " + (i + 1));
-            cb.setTextSize(32);
-            cb.setTextColor(Color.DKGRAY);
-            cb.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-            playerList.addView(cb);
+        for (String s : lines) {
+            Matcher m = pat.matcher(s);
+            if(m.matches()) {
+                int affinity = Integer.parseInt(m.group(1));
+                String name = m.group(2);
+                playerAffinities.put(name, affinity);
+            }
+
         }
+
+        populateList();
+    }
+
+    void populateList() {
+        LinearLayout playerList = findViewById(R.id.playerList);
+        for (Map.Entry<CharSequence, Integer> e : playerAffinities.entrySet()) {
+            CharSequence name = e.getKey();
+            int affinity = e.getValue();
+            CheckBox cb = createBox(name);
+            cb.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+            cb.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f));
+
+            TextView t = new TextView(getApplicationContext());
+            t.setText("" + affinity);
+            t.setTextSize(32);
+            t.setGravity(Gravity.RIGHT);
+
+            LinearLayout ll = new LinearLayout(getApplicationContext());
+            ll.setOrientation(LinearLayout.HORIZONTAL);
+            ll.addView(cb);
+            ll.addView(t);
+            playerList.addView(ll);
+        }
+    }
+
+    CheckBox createBox(CharSequence label) {
+        CheckBox cb = new CheckBox(getApplicationContext());
+        cb.setText(label);
+        cb.setTextSize(32);
+        cb.setTextColor(Color.DKGRAY);
+        cb.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                CharSequence text = buttonView.getText();
+                if (text == null) return;
+                if(isChecked) {
+                    selectedPlayers.add(text);
+                } else {
+                    selectedPlayers.remove(text);
+                }
+                playerCountText.setText("" + selectedPlayers.size());
+            }
+        });
+        return cb;
     }
 }

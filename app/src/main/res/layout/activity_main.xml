@@ -9,7 +9,7 @@
 
     <ScrollView
         android:id="@+id/scrollView"
-        android:layout_width="match_parent"
+        android:layout_width="411dp"
         android:layout_height="597dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="83dp"
@@ -25,33 +25,9 @@
             tools:layout_editor_absoluteX="0dp"
             tools:layout_editor_absoluteY="0dp">
 
-            <CheckBox
-                android:id="@+id/checkBox"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:text="Emmett -- 9"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:layout_editor_absoluteY="16dp" />
-
-            <CheckBox
-                android:id="@+id/checkBox2"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:text="Sean L -- 6"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:layout_editor_absoluteY="16dp" />
 
         </LinearLayout>
+
     </ScrollView>
 
     <android.support.design.widget.FloatingActionButton
@@ -91,5 +67,7 @@
         app:fontFamily="sans-serif-black"
         app:layout_constraintEnd_toStartOf="@+id/startCubeButton"
         app:layout_constraintTop_toBottomOf="@+id/scrollView" />
+
+
 
 </android.support.constraint.ConstraintLayout>
