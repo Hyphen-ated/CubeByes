@@ -153,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
         Pattern pat = Pattern.compile("^\\s*(\\d*)\\s+(.+)");
         LinearLayout playerList = findViewById(R.id.playerList);
         playerList.removeAllViews();
+        playerAffinities.clear();
+        selectedPlayers.clear();
         for (String s : lines) {
             Matcher m = pat.matcher(s);
             if(m.matches()) {
