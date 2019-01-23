@@ -10,8 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -20,12 +18,7 @@ import android.widget.TextView;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -51,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         bar.show();
     }
     
-    private void snackMsg(String msg, Throwable tr) {
+    private void snackErr(String msg, Throwable tr) {
         snackMsg(msg);
         Log.e("cubebyes", msg, tr);
     }
@@ -86,60 +79,57 @@ public class MainActivity extends AppCompatActivity {
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updatePlayerData();
-                setupPlayersFromFile();
+                if(updatePlayerData()) {
+                    setupPlayersFromFile();
+                }
             }
         });
 
         playerCountText = findViewById(R.id.playerCount);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void updatePlayerData() {
+    //returns true if an update occurred
+    private boolean updatePlayerData() {
         URI uri = null;
         try {
             uri = new URI(githubUrl);
         } catch (URISyntaxException e) {
-            snackMsg("Bad URL for player data", e);
-            return;
+            snackErr("Bad URL for player data", e);
+            return false;
         }
         String data = null;
         try {
             data = IOUtils.toString(uri, "utf-8");
         } catch (IOException e) {
-            snackMsg("Couldn't get player data from the internet", e);
-            return;
+            snackErr("Couldn't get player data from the internet", e);
+            return false;
         }
+        
+        String oldData = null;
+        try {
+            FileInputStream fis = openFileInput(playerFileName);
+            oldData = IOUtils.toString(fis, "utf-8");
+            if(data.equals(oldData)) {
+                snackMsg("Player data already up to date");
+                return false;
+            }
+        } catch (FileNotFoundException e) {
+            //if we couldn't find the file, there is no old data and that's fine
+        } catch (IOException e) {
+            //if we failed to read the old file, fine, ignore it for now
+        }
+
+
         File dir = getFilesDir();
         File playersFile = new File(dir, playerFileName);
         try {
             IOUtils.write(data, new FileOutputStream(playersFile));
         } catch (IOException e) {
-            snackMsg("Couldn't write player data to a file", e);
-            return;
+            snackErr("Couldn't write player data to a file", e);
+            return false;
         }
         snackMsg("Updated player data from the internet");
+        return true;
     }
 
     private void setupPlayersFromFile() {
@@ -155,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             }
             //"Couldn't find players.txt"
         } catch (IOException e) {
-            snackMsg("Failed to read local players file", e);
+            snackErr("Failed to read local players file", e);
             return;
         }
 
