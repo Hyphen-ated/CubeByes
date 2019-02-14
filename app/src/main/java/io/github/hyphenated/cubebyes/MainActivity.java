@@ -3,7 +3,6 @@ package io.github.hyphenated.cubebyes;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,11 +15,12 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.android.volley.*;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,9 +35,12 @@ public class MainActivity extends AppCompatActivity {
     private TreeMap<String, Integer> playerAffinities = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private TextView playerCountText;
 
+    private RequestQueue requestQueue;
+    
     public static final String playerFileName = "players.txt";
     public static final String githubUrl = "https://raw.githubusercontent.com/Hyphen-ated/CubeByeAffinities/master/players.txt";
 
+    
     
     private void snackMsg(String msg) {
         Snackbar bar = Snackbar.make(playerCountText, msg, 2000);
@@ -53,10 +56,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //we are running network on the main thread because there is nothing else the app can ever do while waiting
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+        requestQueue = Volley.newRequestQueue(this);
 
         setupPlayersFromFile();
 
@@ -79,60 +79,70 @@ public class MainActivity extends AppCompatActivity {
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(updatePlayerData()) {
-                    setupPlayersFromFile();
-                }
+                updatePlayerData();
             }
         });
 
         playerCountText = findViewById(R.id.playerCount);
     }
 
+    
+    
+    
     //returns true if an update occurred
-    private boolean updatePlayerData() {
-        URI uri = null;
-        try {
-            uri = new URI(githubUrl);
-        } catch (URISyntaxException e) {
-            snackErr("Bad URL for player data", e);
-            return false;
-        }
-        String data = null;
-        try {
-            data = IOUtils.toString(uri, "utf-8");
-        } catch (IOException e) {
-            snackErr("Couldn't get player data from the internet", e);
-            return false;
-        }
-        
-        String oldData = null;
-        try {
-            FileInputStream fis = openFileInput(playerFileName);
-            oldData = IOUtils.toString(fis, "utf-8");
-            if(data.equals(oldData)) {
-                snackMsg("Player data already up to date");
-                return false;
+    private void updatePlayerData() {
+        StringRequest req = new StringRequest(Request.Method.GET, githubUrl, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                String oldData = null;
+                try {
+                    FileInputStream fis = openFileInput(playerFileName);
+                    oldData = IOUtils.toString(fis, "utf-8");
+                    if(response.equals(oldData)) {
+                        snackMsg("Player data already up to date");
+                        return;
+                    }
+                } catch (FileNotFoundException e) {
+                    //if we couldn't find the file, there is no old data and that's fine
+                } catch (IOException e) {
+                    //if we failed to read the old file, fine, ignore it
+                }
+
+                File dir = getFilesDir();
+                File playersFile = new File(dir, playerFileName);
+                try {
+                    IOUtils.write(response, new FileOutputStream(playersFile));
+                } catch (IOException e) {
+                    snackErr("Couldn't write player data to a file", e);
+                    return;
+                }
+                
+                if(setupPlayersFromFile()) {
+                    snackMsg("Updated player data from the internet");
+                }
             }
-        } catch (FileNotFoundException e) {
-            //if we couldn't find the file, there is no old data and that's fine
-        } catch (IOException e) {
-            //if we failed to read the old file, fine, ignore it for now
-        }
-
-
-        File dir = getFilesDir();
-        File playersFile = new File(dir, playerFileName);
-        try {
-            IOUtils.write(data, new FileOutputStream(playersFile));
-        } catch (IOException e) {
-            snackErr("Couldn't write player data to a file", e);
-            return false;
-        }
-        snackMsg("Updated player data from the internet");
-        return true;
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                String msg;
+                if (error instanceof NoConnectionError ) {
+                    msg = "You're not connected to the internet";
+                } else if (error instanceof ServerError) {
+                    msg = "Bye data server gave us an unexpected error";
+                } else if (error instanceof TimeoutError || error instanceof NetworkError) {
+                    msg = "Unable to connect to the bye data server";
+                } else {
+                    msg = "Unknown error";
+                }
+                snackErr(msg, error);
+            }
+        });
+        
+        requestQueue.add(req);
+        return;
     }
 
-    private void setupPlayersFromFile() {
+    private boolean setupPlayersFromFile() {
         List<String> lines;
         try {
             FileInputStream fis = openFileInput(playerFileName);
@@ -146,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
             //"Couldn't find players.txt"
         } catch (IOException e) {
             snackErr("Failed to read local players file", e);
-            return;
+            return false;
         }
 
 
@@ -167,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         populateList();
+        return true;
     }
 
     void populateList() {
